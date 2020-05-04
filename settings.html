@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script>
+        var remote = require('electron').remote;
+        var ipcRenderer = require('electron').ipcRenderer;
+        function init_elements() {
+            console.log(remote.getGlobal('sharedObj').global_hide_on_minimize)
+            console.log(remote.getGlobal('sharedObj').global_prompt_on_exit)
+            console.log(remote.getGlobal('sharedObj').global_download_location)
+            document.getElementById("checkbox_hide_on_minimize").checked = remote.getGlobal('sharedObj').global_hide_on_minimize
+            document.getElementById("checkbox_prompt_on_exit").checked = remote.getGlobal('sharedObj').global_prompt_on_exit
+            document.getElementById("wrapper_current_download_folder").innerHTML = remote.getGlobal('sharedObj').global_download_location
+            document.getElementById('btn_select_download_folder').addEventListener('click', _ => {
+                document.getElementById('select_download_folder').click()
+            })
+        }
+
+        function update_download_folder() {
+            console.log(document.getElementsByTagName('input')[0].files[0].path)
+            remote.getGlobal('sharedObj').global_download_location = document.getElementsByTagName('input')[0].files[0].path
+            document.getElementById("wrapper_current_download_folder").innerHTML = remote.getGlobal('sharedObj').global_download_location
+        }
+
+        function save_settings() {
+            console.log("Here")
+            remote.getGlobal('sharedObj').global_hide_on_minimize = document.getElementById("checkbox_hide_on_minimize").checked
+            remote.getGlobal('sharedObj').global_prompt_on_exit = document.getElementById("checkbox_prompt_on_exit").checked
+            ipcRenderer.send('save-settings');
+            window.close();
+        }
+
+        function close_settings() {
+            window.close();
+        }
+    </script>
+    <style>
+        /* The container */
+
+        .container {
+            display: block;
+            position: relative;
+            padding-left: 45px;
+            padding-top: 5px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            font-size: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+        }
+
+        /* Hide the browser's default checkbox */
+
+        .container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Create a custom checkbox */
+
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 40px;
+            width: 40px;
+            background-color: #eee;
+        }
+
+        /* On mouse-over, add a grey background color */
+
+        .container:hover input~.checkmark {
+            background-color: #ccc;
+        }
+
+        /* When the checkbox is checked, add a blue background */
+
+        .container input:checked~.checkmark {
+            background-color: #2196F3;
+        }
+
+        /* Create the checkmark/indicator (hidden when not checked) */
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        /* Show the checkmark when checked */
+
+        .container input:checked~.checkmark:after {
+            display: block;
+        }
+
+        /* Style the checkmark/indicator */
+
+        .container .checkmark:after {
+            left: 15px;
+            top: 10px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 5px 5px 0;
+            -webkit-transform: rotate(45deg);
+            -ms-transform: rotate(45deg);
+            transform: rotate(45deg);
+        }
+
+        .wrapper {
+            max-width: 400px;
+            margin: auto;
+            font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .custom-file-upload {
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            background-color: #2196F3;
+            border: 1px solid #ccc;
+            display: inline-block;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            color: white;
+            font-weight: bolder;
+            font-family: "Segoe UI", "Verdana", "Sans";
+        }
+
+        .button_save {
+            position: relative;
+            border-radius: 10px;
+            background-color: #4CAF50;
+            border: solid 4px white;
+            font-size: 20px;
+            color: #FFFFFF;
+            padding: 15px;
+            width: 150px;
+            text-align: center;
+            -webkit-transition-duration: 0.4s;
+            /* Safari */
+            transition-duration: 0.4s;
+            text-decoration: none;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .button_save:after {
+            content: "";
+            background: #90EE90;
+            display: block;
+            position: absolute;
+            padding-top: 300%;
+            padding-left: 350%;
+            margin-left: -20px!important;
+            margin-top: -120%;
+            opacity: 0;
+            transition: all 0.8s
+        }
+
+        .button_save:active:after {
+            padding: 0;
+            margin: 0;
+            opacity: 1;
+            transition: 0s
+        }
+
+        .button_cancel {
+            position: relative;
+            background-color: red;
+            border-radius: 10px;
+            border: solid 4px white;
+            font-size: 20px;
+            color: #FFFFFF;
+            padding: 15px;
+            width: 150px;
+            text-align: center;
+            -webkit-transition-duration: 0.4s;
+            /* Safari */
+            transition-duration: 0.4s;
+            text-decoration: none;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .button_cancel:after {
+            content: "";
+            background: red;
+            display: block;
+            position: absolute;
+            padding-top: 300%;
+            padding-left: 350%;
+            margin-left: -20px!important;
+            margin-top: -120%;
+            opacity: 0;
+            transition: all 0.8s
+        }
+
+        .button_cancel:active:after {
+            padding: 0;
+            margin: 0;
+            opacity: 1;
+            transition: 0s
+        }
+    </style>
+
+</head>
+
+<body onload="init_elements()">
+    <div id="wrapper_select_download_folder" class="wrapper">
+        Download Folder:
+        <button id="btn_select_download_folder" class="custom-file-upload">Select</button>
+        <input id="select_download_folder" type="file" onchange="update_download_folder()" webkitdirectory/>
+    </div>
+    <div id="wrapper_current_download_folder" class="wrapper"></div>
+    <br>
+    <div id="wrapper_hide_on_min" class="wrapper">
+        <label class="container">Hide on Minimize
+            <input id="checkbox_hide_on_minimize" type="checkbox" checked="checked">
+            <span class="checkmark"></span>
+        </label>
+    </div>
+    <div id="wrapper_prompty_on_exit" class="wrapper">
+        <label class="container">Prompt on Exit
+            <input id="checkbox_prompt_on_exit" type="checkbox">
+            <span class="checkmark"></span>
+        </label>
+    </div>
+    <hr>
+    <div style="text-align: center; position:relative">
+        <span>
+            <button id="btn_save" class="button_save" onclick="save_settings()">Save</button>
+        </span>
+        <span>
+            <button id="btn_cancel" class="button_cancel" onclick="close_settings()">Cancel</button>
+        </span>
+
+    </div>
+</body>
+
+</html>

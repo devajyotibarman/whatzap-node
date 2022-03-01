@@ -10,11 +10,11 @@
   "author": "Devajyoti Barman",
   "license": "MIT",
   "dependencies": {
-    "electron": "^1.8.8",
-    "electron-settings": "^3.2.0",
-    "electron-window-state": "^4.1.1"
+    "electron": "^17.1.0",
+    "electron-settings": "^4.0.2",
+    "electron-window-state": "^5.0.3"
   },
   "devDependencies": {
-    "electron-packager": "^11.2.0"
+    "electron-packager": "^15.4.0"
   }
 }

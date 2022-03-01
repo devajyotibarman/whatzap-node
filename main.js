@@ -33,21 +33,10 @@ ipcMain.on('save-settings', function (event) {
   settings.set('setting_download_location', global.sharedObj.global_download_location)
 });
 
-var shouldQuit = app.makeSingleInstance(function(commandLine, workingDirectory) {
-  // Someone tried to run a second instance, we should focus our window.
-  if (WhatzapWindow) {
-    if (WhatzapWindow.isMinimized()) {
-      WhatzapWindow.restore();
-      
-    }
-    WhatzapWindow.show()
-    WhatzapWindow.focus()
-  }
-});
+const shouldQuit = app.requestSingleInstanceLock()
 
-if (shouldQuit) {
+if (!shouldQuit) {
   app.quit()
-  return
 }
 
 function createWindow() {
@@ -151,13 +140,13 @@ function reloadWindow() {
 
 
 function createTray() {
-  systray = new Tray(path.join(__dirname, '/resources/icons/main-icon.png'))
+  systray = new Tray(path.join(__dirname, 'resources/icons/main-icon.png'))
   const contextMenu = Menu.buildFromTemplate([
-    { icon: path.join(__dirname, '/resources/icons/settings-icon.png'), label: 'Settings', type: 'normal', click: showSettings },
-    { icon: path.join(__dirname, '/resources/icons/about-icon.png'), label: 'About', type: 'normal', click: showAboutDialog },
-    { icon: path.join(__dirname, '/resources/icons/reload-icon.png'), label: 'Reload Window', type: 'normal', click: reloadWindow },
-    { icon: path.join(__dirname, '/resources/icons/hide-icon.png'), label: 'Show/Hide', type: 'normal', click: showHideWindow },
-    { icon: path.join(__dirname, '/resources/icons/exit-icon.png'), label: 'Exit', type: 'normal', role: 'quit' }
+    { icon: path.join(__dirname, 'resources/icons/settings-icon.png'), label: 'Settings', type: 'normal', click: showSettings },
+    { icon: path.join(__dirname, 'resources/icons/about-icon.png'), label: 'About', type: 'normal', click: showAboutDialog },
+    { icon: path.join(__dirname, 'resources/icons/reload-icon.png'), label: 'Reload Window', type: 'normal', click: reloadWindow },
+    { icon: path.join(__dirname, 'resources/icons/hide-icon.png'), label: 'Show/Hide', type: 'normal', click: showHideWindow },
+    { icon: path.join(__dirname, 'resources/icons/exit-icon.png'), label: 'Exit', type: 'normal', role: 'quit' }
   ])
 
   systray.setContextMenu(contextMenu)
@@ -165,6 +154,7 @@ function createTray() {
   systray.on('double-click', () => {
     if (!WhatzapWindow.isVisible()) {
       WhatzapWindow.show()
+      WhatzapWindow.focus()
     } else {
       WhatzapWindow.hide()
     }
@@ -227,6 +217,20 @@ app.on('browser-window-created', function (e, window) {
   window.setMenu(null);
 })
 
+
+//Second Instance should not be allowed and should instead bring App into Focus.
+
+app.on('second-instance', (event, argv, cwd) => {
+  // Someone tried to run a second instance, we should focus our window.
+  if (WhatzapWindow) {
+    if (WhatzapWindow.isMinimized()) {
+      WhatzapWindow.restore();
+    }
+
+    WhatzapWindow.show()
+    WhatzapWindow.focus()
+  }
+});
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

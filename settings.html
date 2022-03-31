@@ -3,7 +3,7 @@
 
 <head>
     <script>
-        var remote = require('electron').remote;
+        var remote = require('@electron/remote')
         var ipcRenderer = require('electron').ipcRenderer;
         function init_elements() {
             console.log(remote.getGlobal('sharedObj').global_hide_on_minimize)
@@ -12,15 +12,13 @@
             document.getElementById("checkbox_hide_on_minimize").checked = remote.getGlobal('sharedObj').global_hide_on_minimize
             document.getElementById("checkbox_prompt_on_exit").checked = remote.getGlobal('sharedObj').global_prompt_on_exit
             document.getElementById("wrapper_current_download_folder").innerHTML = remote.getGlobal('sharedObj').global_download_location
-            document.getElementById('btn_select_download_folder').addEventListener('click', _ => {
-                document.getElementById('select_download_folder').click()
-            })
         }
 
         function update_download_folder() {
-            console.log(document.getElementsByTagName('input')[0].files[0].path)
-            remote.getGlobal('sharedObj').global_download_location = document.getElementsByTagName('input')[0].files[0].path
-            document.getElementById("wrapper_current_download_folder").innerHTML = remote.getGlobal('sharedObj').global_download_location
+            ipcRenderer.invoke('select-download-directory').then((result) => {
+                console.log(result)
+                document.getElementById("wrapper_current_download_folder").innerHTML = result
+            })
         }
 
         function save_settings() {
@@ -217,8 +215,7 @@
 <body onload="init_elements()">
     <div id="wrapper_select_download_folder" class="wrapper">
         Download Folder:
-        <button id="btn_select_download_folder" class="custom-file-upload">Select</button>
-        <input id="select_download_folder" type="file" onchange="update_download_folder()" webkitdirectory/>
+        <button id="btn_select_download_folder" class="custom-file-upload" onclick="update_download_folder()">Select</button>
     </div>
     <div id="wrapper_current_download_folder" class="wrapper"></div>
     <br>

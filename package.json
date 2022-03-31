@@ -10,7 +10,9 @@
   "author": "Devajyoti Barman",
   "license": "MIT",
   "dependencies": {
+    "@electron/remote": "^2.0.8",
     "electron": "^17.1.0",
+    "electron-app-settings": "^1.2.2",
     "electron-settings": "^4.0.2",
     "electron-window-state": "^5.0.3"
   },

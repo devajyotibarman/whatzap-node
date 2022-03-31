@@ -3,7 +3,7 @@ const path = require('path')
 const url = require('url')
 const windowStateKeeper = require('electron-window-state');
 const { dialog } = require('electron')
-const settings = require('electron-settings');
+const settings = require('electron-app-settings');
 const ipcMain = require('electron').ipcMain;
 const { session } = require('electron')
 
@@ -20,7 +20,6 @@ global.sharedObj = {
   global_download_location: app.getPath('downloads')
 }
 
-
 // Modify the user agent for all requests to the following urls.
 const filter = {
   urls: ['https://web.whatsapp.com/*']
@@ -31,6 +30,14 @@ ipcMain.on('save-settings', function (event) {
   settings.set('setting_hide_on_minimize', global.sharedObj.global_hide_on_minimize)
   settings.set('setting_prompt_on_exit', global.sharedObj.global_prompt_on_exit)
   settings.set('setting_download_location', global.sharedObj.global_download_location)
+  console.log(global.sharedObj.global_download_location)
+});
+
+ipcMain.handle('select-download-directory', async (event, arg) => {
+  result = await dialog.showOpenDialog({properties: ['openDirectory']})
+  console.log(result.filePaths[0])
+  global.sharedObj.global_download_location = result.filePaths[0]
+  return result.filePaths[0]
 });
 
 const shouldQuit = app.requestSingleInstanceLock()
@@ -110,7 +117,20 @@ function showHideWindow(menuItem, browserWindow, event) {
 
 function showSettings(menuItem, browserWindow, event) {
   // Create the browser window.
-  SettingsWindow = new BrowserWindow({ 'title': 'Whatzap Settings', 'width': 450, 'height': 300, 'icon': path.join(__dirname, '/resources/icons/main-icon.png') })
+  SettingsWindow = new BrowserWindow({ 
+    'title': 'Whatzap Settings',
+    'width': 450,
+    'height': 300,
+    'icon': path.join(__dirname, '/resources/icons/main-icon.png'),
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true,
+      contextIsolation: false
+    }
+  
+  })
+
+  require("@electron/remote/main").enable(SettingsWindow.webContents);
 
   // and load the index.html of the app.
   SettingsWindow.loadURL(url.format({
@@ -119,7 +139,7 @@ function showSettings(menuItem, browserWindow, event) {
     slashes: true,
     resizable: false,
     maximizable: false,
-    modal: true
+    modal: true,
   }))
 
   // Open the DevTools.
@@ -137,7 +157,6 @@ function showSettings(menuItem, browserWindow, event) {
 function reloadWindow() {
     WhatzapWindow.loadURL("https://web.whatsapp.com/", {userAgent: 'Chrome'})
 }
-
 
 function createTray() {
   systray = new Tray(path.join(__dirname, 'resources/icons/main-icon.png'))
@@ -160,11 +179,8 @@ function createTray() {
     }
   })
 }
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', () => {
-  //Set up Settings
+
+function initialize_globals () {
   if (settings.has('setting_hide_on_minimize')) {
     global.sharedObj.global_hide_on_minimize = settings.get('setting_hide_on_minimize')
   } else {
@@ -184,6 +200,16 @@ app.on('ready', () => {
   } else {
     settings.set('setting_download_location', global.sharedObj.global_download_location)
   }
+}
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.whenReady().then(() => {  //Set up Settings
+  
+  initialize_globals()
+  console.log(global.sharedObj.global_hide_on_minimize)
+  console.log(global.sharedObj.global_prompt_on_exit)
+  console.log(global.sharedObj.global_download_location)
 
   mainWindowState = windowStateKeeper({ defaultWidth: 800, defaultHeight: 600 });
 
@@ -192,8 +218,18 @@ app.on('ready', () => {
     callback({ cancel: false, requestHeaders: details.requestHeaders })
   })
 
+
+  require('@electron/remote/main').initialize()  
   createWindow()
   createTray()
+
+  app.on('activate', () => {
+    // On macOS it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (WhatzapWindow === null) {
+      createWindow()
+    }
+  })
 })
 
 // Quit when all windows are closed.
@@ -202,14 +238,6 @@ app.on('window-all-closed', () => {
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
     app.quit()
-  }
-})
-
-app.on('activate', () => {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (WhatzapWindow === null) {
-    createWindow()
   }
 })
 
